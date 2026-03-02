@@ -15,20 +15,22 @@ function drawNumbers(): number[] {
   return drawn.sort((a, b) => a - b);
 }
 
+type SavedRow = { id: number; numbers: number[] };
+
+const messages = [
+  "Good luck!",
+  "Fingers crossed!",
+  "Maybe this is the one!",
+  "Here's hoping!",
+  "Fortune favours the bold!",
+  "You never know!",
+];
+
 export default function Home() {
   const [numbers, setNumbers] = useState<number[]>([]);
-  const [savedRows, setSavedRows] = useState<number[][]>([]);
+  const [savedRows, setSavedRows] = useState<SavedRow[]>([]);
   const [message, setMessage] = useState("");
   const [duplicateWarning, setDuplicateWarning] = useState(false);
-
-  const messages = [
-    "Good luck!",
-    "Fingers crossed!",
-    "Maybe this is the one!",
-    "Here's hoping!",
-    "Fortune favours the bold!",
-    "You never know!",
-  ];
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-slate-100 to-blue-50 flex flex-col items-center justify-center p-8">
@@ -40,6 +42,7 @@ export default function Home() {
             alt="Lottery logo"
             width={44}
             height={44}
+            priority
           />
           <h1 className="text-3xl font-bold tracking-tight text-gray-800">
             UK Lotto Draw
@@ -91,12 +94,15 @@ export default function Home() {
                 <button
                   onClick={() => {
                     const isDuplicate = savedRows.some(
-                      (row) => row.join(",") === numbers.join(","),
+                      (row) => row.numbers.join(",") === numbers.join(","),
                     );
                     if (isDuplicate) {
                       setDuplicateWarning(true);
                     } else {
-                      setSavedRows((prev) => [...prev, numbers]);
+                      setSavedRows((prev) => [
+                        ...prev,
+                        { id: Date.now(), numbers },
+                      ]);
                       setDuplicateWarning(false);
                     }
                   }}
@@ -143,14 +149,14 @@ export default function Home() {
             </div>
             {savedRows.map((row, i) => (
               <div
-                key={i}
+                key={row.id}
                 className="flex gap-2 items-center bg-gray-50 rounded-xl px-4 py-3"
               >
                 <span className="text-xs font-semibold text-gray-300 w-5 shrink-0">
                   #{i + 1}
                 </span>
                 <div className="flex gap-2 flex-1 justify-center">
-                  {row.map((num, j) => (
+                  {row.numbers.map((num, j) => (
                     <div
                       key={j}
                       className="w-9 h-9 rounded-full bg-gradient-to-b from-amber-200 to-amber-400 flex items-center justify-center text-xs font-bold text-amber-900 shadow-sm"
@@ -161,8 +167,9 @@ export default function Home() {
                 </div>
                 <button
                   onClick={() =>
-                    setSavedRows((prev) => prev.filter((_, idx) => idx !== i))
+                    setSavedRows((prev) => prev.filter((r) => r.id !== row.id))
                   }
+                  aria-label={`Remove line ${i + 1}`}
                   className="w-6 h-6 rounded-full bg-gray-200 hover:bg-red-100 hover:text-red-500 text-gray-400 flex items-center justify-center text-sm transition-colors shrink-0"
                 >
                   ×
